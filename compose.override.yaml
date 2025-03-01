@@ -22,9 +22,3 @@ services:
 
 ###> symfony/mercure-bundle ###
 ###< symfony/mercure-bundle ###
-
-###> doctrine/doctrine-bundle ###
-  mysql:
-    ports:
-      - "3310"
-###< doctrine/doctrine-bundle ###
