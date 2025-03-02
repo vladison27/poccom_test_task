@@ -22,7 +22,7 @@ class BookController extends AbstractController
     {
         $from = $request->query->get('from');
         $to = $request->query->get('to');
-        $genreId = $request->query->get('genre_id');
+        $genreId = $request->query->get('genreId');
         $limit = (int) $request->query->get('limit', 5);
 
         if (!$from || !$to) {
