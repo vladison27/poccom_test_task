@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Sell;
+use DateTime;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -14,6 +15,28 @@ class SellRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Sell::class);
+    }
+
+    public function findPopularAuthors(DateTime $periodFrom, DateTime $periodTo, ?int $genreId, int $limit): array
+    {
+        $qb = $this->createQueryBuilder('s')
+            ->select('a.id, a.name, a.birth_date, SUM(s.count) as totalSold')
+            ->join('s.book', 'b')
+            ->join('b.authors', 'a')
+            ->where('s.created_at BETWEEN :periodFrom AND :periodTo')
+            ->groupBy('a.id')
+            ->orderBy('totalSold', 'DESC')
+            ->setParameter('periodFrom', $periodFrom)
+            ->setParameter('periodTo', $periodTo)
+            ->setMaxResults($limit);
+
+        if ($genreId !== null) {
+            $qb->join('b.genres', 'g')
+                ->andWhere('g.id = :genreId')
+                ->setParameter('genreId', $genreId);
+        }
+
+        return $qb->getQuery()->getResult();
     }
 
     //    /**

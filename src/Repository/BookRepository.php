@@ -16,6 +16,49 @@ class BookRepository extends ServiceEntityRepository
         parent::__construct($registry, Book::class);
     }
 
+    public function findTopSales(\DateTime $from, \DateTime $to, ?int $genreId, int $limit = 5): array
+    {
+        $qb = $this->createQueryBuilder('b')
+            ->select('b.id, b.name, b.publicated_at, MAX(s.created_at) as last_sale_date, 
+                      MAX(s.count * s.price_per_unit) as max_total_price')
+            ->join('b.sells', 's')
+            ->where('s.created_at BETWEEN :from AND :to')
+            ->setParameter('from', $from)
+            ->setParameter('to', $to)
+            ->groupBy('b.id')
+            ->orderBy('max_total_price', 'DESC')
+            ->setMaxResults($limit);
+
+        if ($genreId) {
+            $qb->join('b.genres', 'g')
+                ->andWhere('g.id = :genreId')
+                ->setParameter('genreId', $genreId);
+        }
+
+        $books = $qb->getQuery()->getResult();
+
+        // Подгружаем авторов и жанры
+        foreach ($books as &$book) {
+            $book['authors'] = $this->createQueryBuilder('b')
+                ->select('a.id, a.name')
+                ->join('b.authors', 'a')
+                ->where('b.id = :bookId')
+                ->setParameter('bookId', $book['id'])
+                ->getQuery()
+                ->getResult();
+
+            $book['genres'] = $this->createQueryBuilder('b')
+                ->select('g.id, g.name')
+                ->join('b.genres', 'g')
+                ->where('b.id = :bookId')
+                ->setParameter('bookId', $book['id'])
+                ->getQuery()
+                ->getResult();
+        }
+
+        return $books;
+    }
+
     //    /**
     //     * @return Book[] Returns an array of Book objects
     //     */
