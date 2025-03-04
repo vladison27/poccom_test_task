@@ -18,7 +18,7 @@ use Symfony\Component\Validator\Validation;
 class BookController extends AbstractController
 {
     #[Route('/api/books/largest-checks', methods: ['GET'])]
-    public function getBooksWithLargestChecks(Request $request, BookRepository $bookRepository): JsonResponse
+    public function getBooksWithLargestChecks(Request $request, BookRepository $bookRepository, SellRepository $sellRepository): JsonResponse
     {
         $from = $request->query->get('from');
         $to = $request->query->get('to');
@@ -36,7 +36,29 @@ class BookController extends AbstractController
             $limit
         );
 
-        return $this->json($topSales);
+        // Вывод даты максимального чека, авторов и жанров
+        $books = [];
+        foreach($topSales as $topSale) {
+
+            foreach($bookRepository->find($topSale['id'])->getAuthors() as $author) {
+                $topSale['authors'][] = [
+                    'id' => $author->getId(),
+                    'name' => $author->getName(),
+                ];
+            }
+
+            foreach($bookRepository->find($topSale['id'])->getGenres() as $genre) {
+                $topSale['genres'][] = [
+                    'id' => $genre->getId(),
+                    'name' => $genre->getName(),
+                ];
+            }
+
+            $topSale['last_sale_date'] = $sellRepository->largestPriceDate($topSale['id']);
+            $books[] = $topSale;
+        }
+
+        return $this->json($books);
     }
 
     #[Route('/api/books/new', methods: ['POST'])]

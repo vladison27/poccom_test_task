@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\Book;
 use App\Entity\Sell;
 use DateTime;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
@@ -37,6 +38,18 @@ class SellRepository extends ServiceEntityRepository
         }
 
         return $qb->getQuery()->getResult();
+    }
+
+    public function largestPriceDate($bookId): array
+    {
+        $qb = $this->createQueryBuilder('s')
+            ->select('s.created_at')
+            ->where('s.book = :bookId')
+            ->orderBy('s.count * s.price_per_unit', 'DESC')
+            ->setParameter('bookId', $bookId)
+            ->setMaxResults(1);
+
+        return $qb->getQuery()->getOneOrNullResult();
     }
 
     //    /**

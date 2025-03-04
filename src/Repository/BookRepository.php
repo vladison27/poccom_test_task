@@ -35,28 +35,7 @@ class BookRepository extends ServiceEntityRepository
                 ->setParameter('genreId', $genreId);
         }
 
-        $books = $qb->getQuery()->getResult();
-
-        // Подгружаем авторов и жанры
-        foreach ($books as &$book) {
-            $book['authors'] = $this->createQueryBuilder('b')
-                ->select('a.id, a.name')
-                ->join('b.authors', 'a')
-                ->where('b.id = :bookId')
-                ->setParameter('bookId', $book['id'])
-                ->getQuery()
-                ->getResult();
-
-            $book['genres'] = $this->createQueryBuilder('b')
-                ->select('g.id, g.name')
-                ->join('b.genres', 'g')
-                ->where('b.id = :bookId')
-                ->setParameter('bookId', $book['id'])
-                ->getQuery()
-                ->getResult();
-        }
-
-        return $books;
+        return $qb->getQuery()->getResult();
     }
 
     //    /**
