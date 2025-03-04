@@ -71,8 +71,10 @@ class BookController extends AbstractController
         $authors = explode(',', $data['authors']);
         $genres = explode(',', $data['genres']);
 
+        $error = [];
+
         if (!$name || !$year || !$authors || !$genres) {
-            return $this->json(['error' => 'Missing required parameters'], 400);
+            $error[] = 'Missing required parameters';
         }
 
         $book = new Book();
@@ -81,16 +83,37 @@ class BookController extends AbstractController
 
         foreach($authors as $author) {
             $a = $authorRepository->find($author);
-            $book->addAuthor($a);
+
+            if(!empty($a)) {
+                $book->addAuthor($a);
+            }
+            else {
+                $error[] = 'Author with id ' . $author . ' not found';
+            }
         }
 
         foreach($genres as $genre) {
             $g = $genreRepository->find($genre);
-            $book->addGenre($g);
-        }
-        $entityManager->persist($book);
-        $entityManager->flush();
 
-        return $this->json(['success' => true]);
+            if(!empty($g)) {
+                $book->addGenre($g);
+            }
+            else {
+                $error[] = 'Genre with id ' . $genre . ' not found';
+            }
+        }
+
+        if(empty($error)) {
+
+            $entityManager->persist($book);
+            $entityManager->flush();
+
+            return $this->json(['success' => true]);
+        }
+        else {
+
+            return $this->json(['errors' => $error], 400);
+
+        }
     }
 }
