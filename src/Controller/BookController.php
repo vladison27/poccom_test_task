@@ -78,8 +78,15 @@ class BookController extends AbstractController
         }
 
         $book = new Book();
-        $book->setName($name);
-        $book->setPublicatedAt($year);
+
+        if(intval($year) != $year) {
+            $error[] = 'Year is incorrect';
+        }
+        else {
+            if($year > (int) date('Y')) {
+                $error[] = 'Year must be less than current';
+            }
+        }
 
         foreach($authors as $author) {
             $a = $authorRepository->find($author);
@@ -104,6 +111,9 @@ class BookController extends AbstractController
         }
 
         if(empty($error)) {
+
+            $book->setName($name);
+            $book->setPublicatedAt($year);
 
             $entityManager->persist($book);
             $entityManager->flush();
