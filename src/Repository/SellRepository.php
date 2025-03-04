@@ -40,13 +40,17 @@ class SellRepository extends ServiceEntityRepository
         return $qb->getQuery()->getResult();
     }
 
-    public function largestPriceDate($bookId): array
+    public function largestPriceDate($bookId, $from, $to): array
     {
         $qb = $this->createQueryBuilder('s')
             ->select('s.created_at')
             ->where('s.book = :bookId')
+            ->andWhere('s.created_at BETWEEN :periodFrom AND :periodTo')
             ->orderBy('s.count * s.price_per_unit', 'DESC')
+            ->addOrderBy('s.created_at', 'DESC')
             ->setParameter('bookId', $bookId)
+            ->setParameter('periodFrom', $from)
+            ->setParameter('periodTo', $to)
             ->setMaxResults(1);
 
         return $qb->getQuery()->getOneOrNullResult();
